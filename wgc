@@ -1,0 +1,189 @@
+#!/bin/bash
+#
+# wgc v0.3 . Create wireguard server and client configuration
+#
+# Copyright (C) 2020 Angel. uGeek
+# ugeekpodcast@gmail.com
+#
+#
+
+
+RUTA_SERVIDOR="192.168.1.100"
+DNS="1.1.1.1, 8.8.8.8"
+LLAVE_PUBLICA_SERVIDOR="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX="
+
+
+
+function help {
+    echo ""
+    echo -e "\e[1mwgc"
+    echo "Crea clientes y configuración del servidor Wireguard "
+    echo ""
+    echo "./wgc    [Nombre del dispositivo]     Crea clientes de wireguard"     
+    echo "./wgc -r                              Crea archivo de configuración del servidor wireguard para Raspbian"
+    echo "./wgc -d                              Crea archivo de configuración del servidor wireguard para Debian"   
+    echo " "
+    echo "./wgc -ir                             Instalar Wireguard en Raspbian"
+    echo "./wgc -id                             Instalar Wireguard en Debian"
+    echo " "
+    echo " "                             
+    echo "wgc v0.3 "
+    echo " "
+    echo " "
+}
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ]; then
+    help
+    exit
+fi
+
+
+if [ "$1" = "-r" ] ; then
+    echo "Escribe el nombre de tu interfaz de red. Ejem: wlan0, eth0"
+    read I_RED
+  
+    wg genkey > server_private.key
+    wg pubkey > server_public.key < server_private.key
+
+echo "
+[Interface]
+Address = 192.168.99.1/24
+ListenPort = 51820
+PrivateKey = "$(cat server_private.key)"
+PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o "$I_RED" -j MASQUERADE; ip6tables -A FORWARD -i wg0 -j ACCEPT; ip6tables -t nat -A POSTROUTING -o "$I_RED" -j MASQUERADE
+PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o "$I_RED" -j MASQUERADE; ip6tables -D FORWARD -i wg0 -j ACCEPT; ip6tables -t nat -D POSTROUTING -o "$I_RED" -j MASQUERADE
+" > wg0.conf
+echo " "
+echo "Añade a este scritp la llave pública del servidor, para crear despues los clientes"
+echo " "
+echo "LLAVE_PUBLICA_SERVIDOR="$(cat server_public.key)""
+echo " "
+  exit
+fi
+
+
+if [ "$1" = "-d" ] ; then
+ 
+    wg genkey > server_private.key
+    wg pubkey > server_public.key < server_private.key
+
+echo "
+[Interface]
+Address = 192.168.99.1/24
+ListenPort = 51820
+PrivateKey = "$(cat server_private.key)"
+PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+" > wg0.conf
+echo " "
+echo "Añade a este scritp la llave pública del servidor, para crear despues los clientes"
+echo " "
+echo "LLAVE_PUBLICA_SERVIDOR="$(cat server_public.key)""
+echo " "
+  exit
+fi
+
+
+# Install Raspbian
+if [ "$1" = "-ir" ] ; then
+ 
+if [ $(id -u) -eq 0 ] 
+then
+    apt-get update && apt-get upgrade -y
+    apt-get install -y raspberrypi-kernel-headers dirmngr
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 8B48AD6246925553 7638D0442B90D010 04EE7237B7D453EC 648ACFD622F3D138
+    if [ -z "$(grep -E 'deb\s*http://deb.debian.org/debian/\s*unstable\s*main' /etc/apt/sources.list.d/unstable.list)" ]
+    then
+        echo "deb http://deb.debian.org/debian/ unstable main" | tee -a /etc/apt/sources.list.d/unstable.list
+    fi
+    if [ -z "$(grep -E 'Pin:\s*release\s*a=unstable' /etc/apt/preferences.d/limit-unstable)" ]
+    then
+        printf "Package: *\nPin: release a=unstable\nPin-Priority: 150\n" | tee -a /etc/apt/preferences.d/limit-unstable
+    fi
+    apt-get update && apt-get install -y wireguard
+    apt install qrencode
+    sed -i "s/#*\s*net.ipv4.ip_forward\s*=\s*[01]/net.ipv4.ip_forward = 1/g" /etc/sysctl.conf
+    sudo sysctl -w net.ipv4.ip_forward=1
+    reboot
+else
+    echo "Error: need to call this script as root, not as normal user!"
+fi
+
+  exit
+fi
+
+# Install Debian
+if [ "$1" = "-id" ] ; then
+ 
+if [ $(id -u) -eq 0 ] 
+then
+    echo "deb http://deb.debian.org/debian/ unstable main" > /etc/apt/sources.list.d/unstable.list
+    printf 'Package: *\nPin: release a=unstable\nPin-Priority: 90\n' > /etc/apt/preferences.d/limit-unstable
+    apt-get update && apt-get install -y wireguard
+    apt install qrencode
+    sed -i "s/#*\s*net.ipv4.ip_forward\s*=\s*[01]/net.ipv4.ip_forward = 1/g" /etc/sysctl.conf
+    sudo sysctl -w net.ipv4.ip_forward=1
+    reboot
+
+else
+    echo "Error: need to call this script as root, not as normal user!"
+fi
+
+  exit
+fi
+
+
+echo "Escribe el número de Cliente"
+read CLIENTE
+NUM_CLIENTE=$(("$CLIENTE" + 1))
+
+if [ -z "$1" ]
+then
+    echo "Necesitas poner el nombre del cliente. Ejemplo ./wgc movil_xiaomi"
+  else
+    name=$1
+    wg genkey > $1_private.key
+    wg pubkey > $1_public.key < $1_private.key
+
+    echo "
+[Interface]
+PrivateKey = "$(cat $1_private.key)"
+Address = 192.168.99."$NUM_CLIENTE"/24
+DNS = $DNS 
+
+[Peer]
+Endpoint = "$RUTA_SERVIDOR":51820
+PublicKey = "$LLAVE_PUBLICA_SERVIDOR"
+AllowedIPs = 0.0.0.0/0
+PersistentKeepalive = 25
+" > $1.conf
+
+
+
+    clear
+
+echo "Copia en el archivo del servidor:
+# "$1"
+[Peer]
+PublicKey = "$(cat $1_public.key)" 					
+AllowedIPs = 192.168.99."$NUM_CLIENTE"/32" > $1_server.txt
+
+    
+qrencode -t ansiutf8 <  $1.conf
+
+
+
+echo ""
+echo ""
+echo ""
+echo ""
+
+cat $1_server.txt
+
+echo ""
+echo ""
+echo ""
+echo ""
+
+
+fi
