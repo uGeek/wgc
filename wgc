@@ -185,6 +185,7 @@ PersistentKeepalive = 25
     clear
 
 echo "Copia en el archivo del servidor:
+
 # "$1"
 [Peer]
 PublicKey = "$(cat $1_public.key)" 					
