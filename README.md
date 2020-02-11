@@ -1,6 +1,26 @@
 # wgc
 Create clients and Wireguard server configuration
 
+## Download
+```
+mkdir -p /etc/wireguard ; cd /etc/wireguard
+```
+
+```
+wget https://raw.githubusercontent.com/uGeek/wgc/master/wgc
+```
+
+```
+sudo chmod +x wgc
+```
+
+```
+./wgc
+```
+
+
+
+## Help
 ```
 wgc
 Create clients and Wireguard server configuration
@@ -16,3 +36,5 @@ Create clients and Wireguard server configuration
  
 wgc v0.4
 ```
+
+2020  https://ugeek.github.io
