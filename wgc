@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# wgc v0.3 . Create wireguard server and client configuration
+# wgc v0.4 . Create wireguard server and client configuration
 #
 # Copyright (C) 2020 Angel. uGeek
 # ugeekpodcast@gmail.com
@@ -8,26 +8,21 @@
 #
 
 
-RUTA_SERVIDOR="192.168.1.100"
-DNS="1.1.1.1, 8.8.8.8"
-LLAVE_PUBLICA_SERVIDOR="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX="
-
-
-
 function help {
     echo ""
     echo -e "\e[1mwgc"
     echo "Crea clientes y configuración del servidor Wireguard "
     echo ""
-    echo "./wgc    [Nombre del dispositivo]     Crea clientes de wireguard"     
+    echo "./wgc    [Nombre del dispositivo]     Crea clientes de wireguard"
     echo "./wgc -r                              Crea archivo de configuración del servidor wireguard para Raspbian"
-    echo "./wgc -d                              Crea archivo de configuración del servidor wireguard para Debian"   
+    echo "./wgc -d                              Crea archivo de configuración del servidor wireguard para Debian, Ubuntu"
     echo " "
     echo "./wgc -ir                             Instalar Wireguard en Raspbian"
     echo "./wgc -id                             Instalar Wireguard en Debian"
+    echo "./wgc -id                             Instalar Wireguard en Ubuntu"
     echo " "
-    echo " "                             
-    echo "wgc v0.3 "
+    echo " "
+    echo "wgc v0.4 "
     echo " "
     echo " "
 }
@@ -63,7 +58,9 @@ fi
 
 
 if [ "$1" = "-d" ] ; then
- 
+    echo "Escribe el nombre de tu interfaz de red. Ejem: wlan0, eth0"
+    read I_RED
+  
     wg genkey > server_private.key
     wg pubkey > server_public.key < server_private.key
 
@@ -72,16 +69,36 @@ echo "
 Address = 192.168.99.1/24
 ListenPort = 51820
 PrivateKey = "$(cat server_private.key)"
-PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o "$I_RED" -j MASQUERADE
+PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o "$I_RED" -j MASQUERADE
 " > wg0.conf
 echo " "
 echo "Añade a este scritp la llave pública del servidor, para crear despues los clientes"
 echo " "
-echo "LLAVE_PUBLICA_SERVIDOR="$(cat server_public.key)""
+echo "LLAVE_PUBLICA_SERVIDOR =  "$(cat server_public.key)""
 echo " "
   exit
 fi
+
+
+# Install Ubuntu
+if [ "$1" = "-iu" ] ; then
+ 
+if [ $(id -u) -eq 0 ] 
+then
+    apt-get update && apt-get upgrade -y
+    apt install wireguard
+    apt install qrencode
+    sed -i "s/#*\s*net.ipv4.ip_forward\s*=\s*[01]/net.ipv4.ip_forward = 1/g" /etc/sysctl.conf
+    sudo sysctl -w net.ipv4.ip_forward=1
+    reboot
+else
+    echo "Error: Necesitas ejecutarlo con sudo"
+fi
+
+  exit
+fi
+
 
 
 # Install Raspbian
@@ -106,7 +123,7 @@ then
     sudo sysctl -w net.ipv4.ip_forward=1
     reboot
 else
-    echo "Error: need to call this script as root, not as normal user!"
+    echo "Error: Necesitas ejecutarlo con sudo"
 fi
 
   exit
@@ -126,7 +143,7 @@ then
     reboot
 
 else
-    echo "Error: need to call this script as root, not as normal user!"
+    echo "Error: Necesitas ejecutarlo con sudo"
 fi
 
   exit
@@ -187,3 +204,4 @@ echo ""
 
 
 fi
+
