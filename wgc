@@ -157,7 +157,7 @@ fi
 
 echo "Escribe el número de Cliente"
 read CLIENTE
-NUM_CLIENTE=$(("$CLIENTE" + 1))
+NUM_CLIENTE=$(($CLIENTE + 1))
 
 if [ -z "$1" ]
 then
