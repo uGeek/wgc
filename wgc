@@ -24,10 +24,10 @@ function help {
     echo " "
     echo "./wgc -ir                             Instalar Wireguard en Raspbian"
     echo "./wgc -id                             Instalar Wireguard en Debian"
-    echo "./wgc -id                             Instalar Wireguard en Ubuntu"
+    echo "./wgc -iu                             Instalar Wireguard en Ubuntu"
     echo " "
     echo " "
-    echo "wgc v0.4 "
+    echo "wgc v0.5 "
     echo " "
     echo " "
 }
@@ -56,7 +56,7 @@ PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING 
 echo " "
 echo "Añade a este scritp la llave pública del servidor, para crear despues los clientes"
 echo " "
-echo "LLAVE_PUBLICA_SERVIDOR="$(cat server_public.key)""
+echo "LLAVE_PUBLICA_SERVIDOR=\"$(cat server_public.key)\""
 echo " "
   exit
 fi
@@ -80,7 +80,7 @@ PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACC
 echo " "
 echo "Añade a este scritp la llave pública del servidor, para crear despues los clientes"
 echo " "
-echo "LLAVE_PUBLICA_SERVIDOR =  "$(cat server_public.key)""
+echo "LLAVE_PUBLICA_SERVIDOR=\"$(cat server_public.key)\""
 echo " "
   exit
 fi
