@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# wgc v0.4 . Create wireguard server and client configuration
+# wgc v0.6 . Create wireguard server and client configuration
 #
 # Copyright (C) 2020 Angel. uGeek
 # ugeekpodcast@gmail.com
@@ -27,7 +27,7 @@ function help {
     echo "./wgc -iu                             Instalar Wireguard en Ubuntu"
     echo " "
     echo " "
-    echo "wgc v0.5 "
+    echo "wgc v0.6 "
     echo " "
     echo " "
 }
@@ -181,7 +181,6 @@ PersistentKeepalive = 25
 " > $1.conf
 
 
-
     clear
 
 echo "Copia en el archivo del servidor:
@@ -190,6 +189,15 @@ echo "Copia en el archivo del servidor:
 [Peer]
 PublicKey = "$(cat $1_public.key)" 					
 AllowedIPs = 192.168.99."$NUM_CLIENTE"/32" > $1_server.txt
+
+
+
+echo "
+# "$1"
+[Peer]
+PublicKey = "$(cat $1_public.key)" 					
+AllowedIPs = 192.168.99."$NUM_CLIENTE"/32" >> wg0.conf
+
 
     
 qrencode -t ansiutf8 <  $1.conf
