@@ -1,5 +1,4 @@
-# wgc
-Create clients and Wireguard server configuration
+
 
 ## Download
 ```
