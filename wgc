@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# wgc v0.6 . Create wireguard server and client configuration
+# wgc v0.7 . Create wireguard server and client configuration
 #
 # Copyright (C) 2020 Angel. uGeek
 # ugeekpodcast@gmail.com
@@ -8,9 +8,9 @@
 #
 
 RUTA_SERVIDOR="192.168.1.100"
+PUERTO="51820"
 DNS="1.1.1.1, 8.8.8.8"
 LLAVE_PUBLICA_SERVIDOR="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX="
-
 
 
 function help {
@@ -19,8 +19,9 @@ function help {
     echo "Crea clientes y configuración del servidor Wireguard "
     echo ""
     echo "./wgc    [Nombre del dispositivo]     Crea clientes de wireguard"
-    echo "./wgc -r                              Crea archivo de configuración del servidor wireguard para Raspbian"
-    echo "./wgc -d                              Crea archivo de configuración del servidor wireguard para Debian, Ubuntu"
+    echo "./wgc -sr                              Crea archivo de configuración del servidor wireguard para Raspbian"
+    echo "./wgc -sd                              Crea archivo de configuración del servidor wireguard para Debian"
+    echo "./wgc -su                              Crea archivo de configuración del servidor wireguard para Ubuntu"
     echo " "
     echo "./wgc -ir                             Instalar Wireguard en Raspbian"
     echo "./wgc -id                             Instalar Wireguard en Debian"
@@ -38,17 +39,16 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ]; then
 fi
 
 
-if [ "$1" = "-r" ] ; then
+if [ "$1" = "-sr" ] ; then
     echo "Escribe el nombre de tu interfaz de red. Ejem: wlan0, eth0"
     read I_RED
   
     wg genkey > server_private.key
     wg pubkey > server_public.key < server_private.key
 
-echo "
-[Interface]
+echo "[Interface]
 Address = 192.168.99.1/24
-ListenPort = 51820
+ListenPort = "$PUERTO"
 PrivateKey = "$(cat server_private.key)"
 PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o "$I_RED" -j MASQUERADE; ip6tables -A FORWARD -i wg0 -j ACCEPT; ip6tables -t nat -A POSTROUTING -o "$I_RED" -j MASQUERADE
 PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o "$I_RED" -j MASQUERADE; ip6tables -D FORWARD -i wg0 -j ACCEPT; ip6tables -t nat -D POSTROUTING -o "$I_RED" -j MASQUERADE
@@ -62,20 +62,42 @@ echo " "
 fi
 
 
-if [ "$1" = "-d" ] ; then
+if [ "$1" = "-sd" ] ; then
     echo "Escribe el nombre de tu interfaz de red. Ejem: wlan0, eth0"
     read I_RED
   
     wg genkey > server_private.key
     wg pubkey > server_public.key < server_private.key
 
-echo "
-[Interface]
+echo "[Interface]
 Address = 192.168.99.1/24
-ListenPort = 51820
+ListenPort = "$PUERTO"
 PrivateKey = "$(cat server_private.key)"
 PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o "$I_RED" -j MASQUERADE
 PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o "$I_RED" -j MASQUERADE
+" > wg0.conf
+echo " "
+echo "Añade a este scritp la llave pública del servidor, para crear despues los clientes"
+echo " "
+echo "LLAVE_PUBLICA_SERVIDOR=\"$(cat server_public.key)\""
+echo " "
+  exit
+fi
+
+
+if [ "$1" = "-su" ] ; then
+    echo "Escribe el nombre de tu interfaz de red. Ejem: wlan0, eth0"
+    read I_RED
+  
+    wg genkey > server_private.key
+    wg pubkey > server_public.key < server_private.key
+
+echo "[Interface]
+Address = 192.168.99.1/24
+ListenPort = "$PUERTO"
+PrivateKey = "$(cat server_private.key)"
+PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o "$I_RED" -j MASQUERADE
+PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -o"$I_RED" -j MASQUERADE
 " > wg0.conf
 echo " "
 echo "Añade a este scritp la llave pública del servidor, para crear despues los clientes"
@@ -218,4 +240,3 @@ echo ""
 
 
 fi
-
