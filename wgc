@@ -196,7 +196,7 @@ Address = 192.168.99."$NUM_CLIENTE"/24
 DNS = $DNS 
 
 [Peer]
-Endpoint = "$RUTA_SERVIDOR":51820
+Endpoint = "$RUTA_SERVIDOR":"$PUERTO"
 PublicKey = "$LLAVE_PUBLICA_SERVIDOR"
 AllowedIPs = 0.0.0.0/0
 PersistentKeepalive = 25
