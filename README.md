@@ -23,18 +23,19 @@ sudo chmod +x wgc
 ## Help
 ```
 wgc
-Create clients and Wireguard server configuration
+Crea clientes y configuración del servidor Wireguard 
 
-./wgc [Device Name] Create wireguard clients
-
-./wgc -r Creates wireguard server configuration file for Raspbian
-./wgc -d Creates wireguard server configuration file for Debian, Ubuntu
+./wgc    [Nombre del dispositivo]     Crea clientes de wireguard
+./wgc -sr                              Crea archivo de configuración del servidor wireguard para Raspbian
+./wgc -sd                              Crea archivo de configuración del servidor wireguard para Debian
+./wgc -su                              Crea archivo de configuración del servidor wireguard para Ubuntu
  
-./wgc -ir Install Wireguard on Raspbian
-./wgc -id Install Wireguard on Debian
-./wgc -iu Install Wireguard on Ubuntu
+./wgc -ir                             Instalar Wireguard en Raspbian
+./wgc -id                             Instalar Wireguard en Debian
+./wgc -iu                             Instalar Wireguard en Ubuntu
  
-wgc v0.4
+ 
+wgc v0.6 
 ```
 
 ## Contact
